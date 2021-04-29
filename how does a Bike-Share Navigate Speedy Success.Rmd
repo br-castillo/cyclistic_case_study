@@ -1,0 +1,117 @@
+---
+title: "How does a Bike-Share Navigate Speedy Success?"
+author: "Bryan Castillo"
+date: "4/20/2021"
+output: html_document
+---
+
+
+# Cyclystic Bike Share
+
+## About the Company
+
+In 2016, Cyclistic launched a successful bike-share offering. Since then the program has grown to a fleet of 5,824 bicycles that are geotracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from any station and be returned to any other station in the network at any time.
+
+Until now, Cyclistic's marketing strategy relied on building general awareness and appealing to broad customer segments. One approach that helped makes these things possible was the flexibility of its pricing plans: single-ride passes, full-day passes, and annual memberships. Customers who purchase single-ride or  full-day passes are referred to as casual riders. Customers who purchase annual memberships are Cyclistic members.
+
+Cyclistic's finance analysts have concluded that annual members are much more profitable than casual riders. Although the pricing flexibility helps Cyclistic attract more customers, Moreno believes that maximizing the number of annual members will be the key to future growth. Rather than creating a marketing campaign that targets all-new customers, Moreno believes there is a very good chance to convert casual riders into members.
+
+## Project Deliverables
+1. Clear statement of the business task
+2. Description of all data sources used
+3. Documentation of any cleaning or manipulation of data
+4. Summary supporting your analysis
+5. Supporting visualizations and key findings
+6. Top 3 recommendations based on analysis
+
+## Ask Phase
+1. How do annual memberships and casual riders use Cyclistic's bikes differently?
+2. Why would casual riders buy Cyclistic annual memberships?
+3. How can Cyclistic use digital media to influence casual riders to become members?
+
+##### **Business Task**: Understanding the difference between Cyclistic's casual riders and members in order to create a marketing campaign to convert casual riders to members, maximizing revenue and leading to future growth.
+
+## Prepare Phase
+The data sources used are stored on an Amazon AWS bucket, containing trip data for Cyclistic dating back to 2004.
+
+Here, I will be using available data from the last 12 months; financial data from **Q2 2019 to Q1 2020** in Excel Spreadsheets. I have saved the original data under the .csv file format in the "Csv Files" Folder. The Prepared and processed data will be in Excel Spreadsheet format saved in the "Xsl Files" folder.
+
+## Process Phase
+
+**Changes being made:** 
+
+* Added a Column called "ride_length", which calculates the duration of the ride in the format HH:DD:SS based on the difference between start_time - end_time
+
+* Added a comumn called "day_of_week" which describes the day of the week the bike rental started. The days are listed in 1 through 7, with 1 = Sunday and 7 = Saturday.
+
+* Deleted column B in "Divvy_trips_2020_q1.xlsx" which simply stated whether or not the bikes started at a locked station. This information is not relevant to our analysis.
+
+* Deleted column for bike_id. This data is not relevant to our analysis
+
+* Deleted columns for starting_stations, ending_stations, station_ids, longitude, latitude, user_birth_dates, and gender. This data is not relevant to our analysis.
+
+* Sorted and Replaced values in Q2, Q3, and Q4 sheets from "Customer" to "Casual" and "Subscriber" to "Member".
+
+* Deleted 171 rows of data in the Q1 sheet with incorrect start and end time formats, where the end time was before the start time with no way of knowing the correct date time. For our purposes, the 171 incorrect rows in the sheet account for less than 10% of the total data in the sheet.
+
+**Importing to SQL then R:**
+
+* Imported to Google BigQuery in order to bring together all spreadsheets into a single table
+
+* Exported "master" table from BigQuery and imported into R Studio, where R was unable to read the "start_time" and "end_time" columns as times, therefore left them as characters
+
+* Changed "ride_length" column back to time format in R Studio
+
+* **Data now ready for analysis**
+
+## Analysis Phase
+The clean data was saved in the folder "Clean Csv Files" with a separate Csv File for each of the Quarterly data.
+
+The following code sets up the clean data for sharing graphs:
+
+```{r}
+library(tidyverse)
+setwd("~/Case Studies for Data Analytics/Case Study 1/Data/Clean Csv Files")
+
+library(readr)
+cyclistic_master <- read_csv("clean_csv_files.csv", 
+                             col_types = cols(ride_length = col_time(format = "%H:%M:%S"), 
+                                              day_of_week = col_double()))
+```
+
+## Share Phase
+
+```{r}
+ggplot(data=cyclistic_master) +
+  geom_bar(mapping = aes(x = user_type, fill = user_type, color = user_type)) +
+  labs(title = "Casual vs. Members Total Count", subtitle = " Cyclistic, Q2 2019 - Q1 2020", y = "Total Count (Thousands)")
+```
+
+The above graph shows the total users count in the previous 12 months, separated by the total users of each type (Casual and Member). Here we can see that casual riders make up about 20% of the total users in the past year of data. Converting these members can make up an additional 20% in revenue and a potential 100% growth in the next five years.
+
+
+#### **How do casual riders and annual members use Cyclistic Bike-Share?**
+
+```{r}
+ggplot(data=cyclistic_master) +
+  geom_bar(mapping = aes(x = day_of_week, fill = user_type, color = day_of_week)) +
+  labs(title = "Count of User Types per Day of Week", x = "Day of Week (Sunday - Saturday)", y = "Number of Users (Thousands)")
+```
+
+The graph above tells us a few different stories. First, we can see that the greatest number of casual riders per total riders is on weekends. Next, we can also see that the highest usage day with the highest number of casual riders is Tuesday. 
+
+```{r}
+setwd("~/Case Studies for Data Analytics/Case Study 1")
+```
+![Image](Average_Ride_length_per_season.PNG)
+
+Lastly, we can see that in this graph, the seasonal average ride_length per member type changes drastically. To begin, in Q2 of 2019, casual riders' average ride length is about a third lower than annual members'. This changes in Q3, when casual riders' average ride length increases by about 300%, slightly drops in Q4, then again increases by almost another 100% in Q1 2020. This story tells us that casual riders are paying for single ride passes, or even daily passes and keeping the bikes rented out for a longer period of time. Since casual riders are holding on to bikes for longer periods of time due to only paying for single ride or one-day passes, this increases the chance of damage done to bikes or stolen bikes to occur, therefore marketing an annual membership to these users with these points can prove very useful in transforming casual riders to annual members.
+
+## Act Phase
+Based on the analysis provided above, the 3 recommendations I give according to the project deliverables are as mentioned below:
+
+* Target casual riders who predominantly use Cyclistic on weekends with a “weekend sign-up special” campaign
+
+* Target casual riders who have higher average ride-length times than members, and compare their casual rate per usage versus their membership rates per usage, which benefits both the prospective member and the company’s growth. Additionally, market the how the probability of bikes getting stolen or damaged decreases from casual riders to members, based on average ride length time.
+
+* Promote a social media campaign for a “Tuesday Promo” with discounted rates, free rides, or special gifts to members on Tuesdays since it is the highest usage day of the week throughout the year
